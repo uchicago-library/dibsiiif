@@ -13,10 +13,15 @@ import shutil
 import subprocess
 import traceback
 from pathlib import Path
-
-# import boto3
-# import botocore
 from decouple import config
+
+using_amazon_s3 = bool(config("S3_BUCKET"))
+
+if using_amazon_s3:
+    import boto3
+    import botocore
+else:
+    pass
 
 # from slack_handler import SlackHandler
 
@@ -42,7 +47,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
             MANIFEST_FILES_DIR,
             PROCESSED_IIIF_DIR,
             PROCESSED_SCANS_DIR,
-            # S3_BUCKET,
+            S3_BUCKET,
             STATUS_FILES_DIR,
             UNPROCESSED_SCANS_DIR,
             VIPS_CMD,
@@ -251,32 +256,35 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
         height = os.popen(f"{VIPS_CMD}header -f height {f}").read().strip()
 
         # upload TIFF to S3
-        # try:
-        #     boto3.client(
-        #         "s3",
-        #         aws_access_key_id=config("AWS_ACCESS_KEY"),
-        #         aws_secret_access_key=config("AWS_SECRET_KEY"),
-        #     ).put_object(
-        #         Bucket=S3_BUCKET,
-        #         Key=f"{barcode}/{page_num}.tif",
-        #         Body=open(
-        #             f"{PROCESSED_IIIF_DIR}/{barcode}/{page_num}.tif",
-        #             "rb",
-        #         ),
-        #     )
-        #     print(
-        #         f" ✅\t TIFF sent to S3: {barcode}/{page_num}.tif",
-        #         flush=True,
-        #     )
-        # except botocore.exceptions.ClientError as e:
-        #     # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/error-handling.html
-        #     if e.response["Error"]["Code"] == "InternalError":
-        #         print(f"Error Message: {e.response['Error']['Message']}")
-        #         print(f"Request ID: {e.response['ResponseMetadata']['RequestId']}")
-        #         print(f"HTTP Code: {e.response['ResponseMetadata']['HTTPStatusCode']}")
-        #     else:
-        #         logger.exception("‼️")
-        #         raise e
+        if using_amazon_s3:
+            try:
+                boto3.client(
+                    "s3",
+                    aws_access_key_id=config("AWS_ACCESS_KEY"),
+                    aws_secret_access_key=config("AWS_SECRET_KEY"),
+                ).put_object(
+                    Bucket=S3_BUCKET,
+                    Key=f"{barcode}/{page_num}.tif",
+                    Body=open(
+                        f"{PROCESSED_IIIF_DIR}/{barcode}/{page_num}.tif",
+                        "rb",
+                    ),
+                )
+                print(
+                    f" ✅\t TIFF sent to S3: {barcode}/{page_num}.tif",
+                    flush=True,
+                )
+            except botocore.exceptions.ClientError as e:
+                # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/error-handling.html
+                if e.response["Error"]["Code"] == "InternalError":
+                    print(f"Error Message: {e.response['Error']['Message']}")
+                    print(f"Request ID: {e.response['ResponseMetadata']['RequestId']}")
+                    print(f"HTTP Code: {e.response['ResponseMetadata']['HTTPStatusCode']}")
+                else:
+                    logger.exception("‼️")
+                    raise e
+        else:
+            pass
 
         # set up canvas
         canvas = {
@@ -360,7 +368,7 @@ def validate_settings():
     PROCESSED_SCANS_DIR = directory_setup(
         os.path.expanduser(config("PROCESSED_SCANS_DIR"))
     ).resolve(strict=True)
-    # S3_BUCKET = config("S3_BUCKET")  # TODO validate access to bucket
+    S3_BUCKET = config("S3_BUCKET")  # TODO validate access to bucket
     STATUS_FILES_DIR = Path(os.path.expanduser(config("STATUS_FILES_DIR"))).resolve(
         strict=True
     )  # NOTE do not create missing `STATUS_FILES_DIR`
@@ -375,7 +383,7 @@ def validate_settings():
         MANIFEST_FILES_DIR,
         PROCESSED_IIIF_DIR,
         PROCESSED_SCANS_DIR,
-        # S3_BUCKET,
+        S3_BUCKET,
         STATUS_FILES_DIR,
         UNPROCESSED_SCANS_DIR,
         VIPS_CMD,

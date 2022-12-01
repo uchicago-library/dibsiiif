@@ -1,0 +1,28 @@
+* difference to abstract over in config
+
+** amazon serverless
+*** DONE optional boto3 and botocore imports
+*** DONE figure out how S3_BUCKET constant can be empty
+**** DONE try block in main() checking for S3_BUCKET constant
+**** DONE constants to return in validate_settings()
+*** DONE entire upload part should be conditional on amazon s3 stuff happening
+
+** logging
+*** make SlackHandler import conditional on using the slack handler
+
+** IIIF image server
+*** if it's IIPImage, no TIFF extension
+*** if it's IIIF serverless, TIFF extension
+
+
+
+
+* Todo-s for getting =dibsiiif.py= up and running
+
+** DONE figure out what canvas base url is for
+** DONE figure out what canvas base url is
+** DONE rename /data/voldemort/dibs/dibs_dropoff to /data/voldemort/dibs/unprocessed/scans
+** DONE rename /data/voldemort/dibs/dibs_iiif to /data/voldemort/dibs/processed/scans
+** DONE point the Loris server (crimson.lib) at:
+   /data/voldemort/dibs/processed/scans
+** DONE confirm the VIPS installation worked, in particular that the right build options were set
