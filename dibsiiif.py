@@ -15,18 +15,13 @@ import traceback
 from pathlib import Path
 from decouple import config
 
-using_amazon_s3 = bool(config("S3_BUCKET"))
+import boto3
+import botocore
 
-if using_amazon_s3:
-    import boto3
-    import botocore
-else:
-    pass
-
-# from slack_handler import SlackHandler
+from slack_handler import SlackHandler
 
 # add SlackHandler to the logging.handlers namespace
-# logging.handlers.SlackHandler = SlackHandler
+logging.handlers.SlackHandler = SlackHandler
 
 logging.config.fileConfig(
     # set the logging configuration in the settings.ini file
@@ -242,13 +237,13 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
         if (
             # TODO use subprocess.run()
             os.system(
-                f"{VIPS_CMD} tiffsave {f} {PROCESSED_IIIF_DIR}/{barcode}/{page_num} --tile --pyramid --compression jpeg --tile-width 256 --tile-height 256"
+                f"{VIPS_CMD} tiffsave {f} {PROCESSED_IIIF_DIR}/{barcode}/{page_num}{EXTENSION} --tile --pyramid --compression jpeg --tile-width 256 --tile-height 256"
             )
             != 0
         ):
             print("❌ an error occurred running the vips command")
             raise RuntimeError(
-                f"{VIPS_CMD} tiffsave {f} {PROCESSED_IIIF_DIR}/{barcode}/{page_num} --tile --pyramid --compression jpeg --tile-width 256 --tile-height 256"
+                f"{VIPS_CMD} tiffsave {f} {PROCESSED_IIIF_DIR}/{barcode}/{page_num}{EXTENSION} --tile --pyramid --compression jpeg --tile-width 256 --tile-height 256"
             )
         # create canvas metadata
         # HACK the binaries for `vips` and `vipsheader` should be in the same place
@@ -376,6 +371,10 @@ def validate_settings():
         os.path.expanduser(config("UNPROCESSED_SCANS_DIR"))
     ).resolve(strict=True)
     VIPS_CMD = Path(os.path.expanduser(config("VIPS_CMD"))).resolve(strict=True)
+    if bool(config("REMOVE_EXTENSION")):
+        EXTENSION=""
+    else:
+        EXTENSION=".tif"
     return (
         CANVAS_BASE_URL,
         IIIF_BASE_URL,
@@ -387,6 +386,7 @@ def validate_settings():
         STATUS_FILES_DIR,
         UNPROCESSED_SCANS_DIR,
         VIPS_CMD,
+        EXTENSION,
     )
 
 
