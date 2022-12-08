@@ -46,6 +46,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
             STATUS_FILES_DIR,
             UNPROCESSED_SCANS_DIR,
             VIPS_CMD,
+            EXTENSION,
         ) = validate_settings()
     except Exception as e:
         # NOTE we cannot guarantee that `STATUS_FILES_DIR` is set
@@ -249,6 +250,8 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
         # HACK the binaries for `vips` and `vipsheader` should be in the same place
         width = os.popen(f"{VIPS_CMD}header -f width {f}").read().strip()
         height = os.popen(f"{VIPS_CMD}header -f height {f}").read().strip()
+
+        using_amazon_s3 = bool(S3_BUCKET)
 
         # upload TIFF to S3
         if using_amazon_s3:
