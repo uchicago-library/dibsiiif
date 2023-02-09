@@ -18,6 +18,7 @@ LOGDIR=/data/local/logs
 SENDER=root@dibs.lib.uchicago.edu
 TeamsEmail="dibsiiif_logs - Controlled Digital Lending <c2de5ca3.teams.uchicago.edu@amer.teams.ms>"
 RECIPIENT="$TeamsEmail, Matt Teichman <teichman@lib.uchicago.edu>"
+IGNORETIFFERROR=yes
 
 DIR=$(dirname "$0")
 INI=$DIR/iiifify.ini
@@ -34,6 +35,12 @@ for FILE in $(ls -tr $STATUS_FILES_DIR/ | grep '^.*-initiated$' | head -1) ; do
     OUTFILE="$LOGDIR/dibsiiif_out_${barcode}_${TIMESTAMP}.txt"
     ## echo "$PYTHON $DIR/dibsiiif.py \"$barcode\" > $OUTFILE 2>&1"
     $PYTHON $DIR/dibsiiif.py "$barcode" > $OUTFILE 2>&1
+    if [ "$IGNORETIFFERROR" = "yes" ] && grep -q 'Incorrect value for "RichTIFFIPTC"' $OUTFILE ; then
+        TMPFILE=`mktemp /tmp/XXXX`
+        grep -E -v 'Incorrect value for "RichTIFFIPTC"|^ *$' $OUTFILE > $TMPFILE
+        cp $TMPFILE $OUTFILE
+        rm $TMPFILE
+    fi 
     if [ -s "$OUTFILE" ]; then
         SUBJECT="dibsiiif error on barcode: $barcode"
         ## cat $OUTFILE | mail -s "${SUBJECT}" "${RECIPIENT}" -sendmail-option -f${SENDER}
