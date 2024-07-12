@@ -392,6 +392,27 @@ def validate_settings():
         EXTENSION,
     )
 
+def get_folio_token():
+
+    def folio_config(key):
+        return config(key, section = 'folio')
+
+    headers = {"Accept": "application/json",
+               "Content-Type": "application/json",
+               "X-Okapi-Tenant": "uchicago", }
+
+    username = folio_config('FOLIO_OKAPI_USERNAME')
+    password = folio_config('FOLIO_OKAPI_PASSWORD')
+    hostname = "https://uchicago-test-okapi.folio.indexdata.com"
+    endpoint = "authn/login-with-expiry"
+
+    json = {"username": username, "password": password}
+    url = "%s/%s" % (hostname, endpoint)
+
+    r = requests.post(url, json=json, headers=headers)
+
+    token = r.cookies.get('folioAccessToken')
+    return token
 
 if __name__ == "__main__":
     # fmt: off
