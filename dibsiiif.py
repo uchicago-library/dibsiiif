@@ -395,17 +395,14 @@ def validate_settings():
 
 def get_folio_token():
 
-    def folio_config(key):
-        return config(key, section = 'folio')
-
     headers = {"Accept": "application/json",
                "Content-Type": "application/json",
                "X-Okapi-Tenant": "uchicago", }
 
-    username = folio_config('FOLIO_OKAPI_USERNAME')
-    password = folio_config('FOLIO_OKAPI_PASSWORD')
-    hostname = folio_config('FOLIO_OKAPI_HOSTNAME')
-    endpoint = folio_config('FOLIO_OKAPI_ENDPOINT')
+    username = config('FOLIO_OKAPI_USERNAME')
+    password = config('FOLIO_OKAPI_PASSWORD')
+    hostname = config('FOLIO_OKAPI_HOSTNAME')
+    endpoint = config('FOLIO_OKAPI_ENDPOINT')
 
     json = {"username": username, "password": password}
     url = "%s/%s" % (hostname, endpoint)
