@@ -144,7 +144,8 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
         FOLIO_API_URL = config("FOLIO_API_URL").rstrip("/")
         okapi_headers = {
             "X-Okapi-Tenant": config("FOLIO_API_TENANT"),
-            "x-okapi-token": config("FOLIO_API_TOKEN"),
+            "x-okapi-token": get_folio_config(),
+            # "x-okapi-token": config("FOLIO_API_TOKEN"),
         }
 
         items_query = f"{FOLIO_API_URL}/inventory/items?query=barcode%3D%3D{barcode}"
