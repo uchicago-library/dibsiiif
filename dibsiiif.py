@@ -403,8 +403,8 @@ def get_folio_token():
 
     username = folio_config('FOLIO_OKAPI_USERNAME')
     password = folio_config('FOLIO_OKAPI_PASSWORD')
-    hostname = "https://uchicago-test-okapi.folio.indexdata.com"
-    endpoint = "authn/login-with-expiry"
+    hostname = folio_config('FOLIO_OKAPI_HOSTNAME')
+    endpoint = folio_config('FOLIO_OKAPI_ENDPOINT')
 
     json = {"username": username, "password": password}
     url = "%s/%s" % (hostname, endpoint)
