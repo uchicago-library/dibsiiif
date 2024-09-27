@@ -48,7 +48,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
     except Exception as e:
         # NOTE we cannot guarantee that `STATUS_FILES_DIR` is set
         # - it must exist if script is started from `iiifify.sh`
-        message = "❌ there was a problem with the settings for the `dibsiiif.py` script"
+        message = "X there was a problem with the settings for the `dibsiiif.py` script"
         logger.exception(message)
         raise
 
@@ -58,7 +58,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
     except Exception as e:
         with open(Path(STATUS_FILES_DIR).joinpath(f"{barcode}-problem"), "w") as f:
             traceback.print_exc(file=f)
-        logger.exception("‼️")
+        logger.exception("!!")
         raise
 
     # remove `STATUS_FILES_DIR/{barcode}-initiated` file
@@ -69,7 +69,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
     except Exception as e:
         with open(Path(STATUS_FILES_DIR).joinpath(f"{barcode}-problem"), "w") as f:
             traceback.print_exc(file=f)
-        logger.exception("‼️")
+        logger.exception("!!")
         raise
 
     # validate the `UNPROCESSED_SCANS_DIR/{barcode}` directory
@@ -80,7 +80,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
     except Exception as e:
         with open(Path(STATUS_FILES_DIR).joinpath(f"{barcode}-problem"), "w") as f:
             traceback.print_exc(file=f)
-        logger.exception("‼️")
+        logger.exception("!!")
         raise
 
     # set up lists of TIFF paths and sequence numbers
@@ -92,11 +92,11 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
             parts = list(filter(None, i.name.split(".")[0].split("_")))
             if not parts[0] == barcode:
                 print(
-                    f" ⚠️\t unexpected file name format encountered: {barcode}/{i.name}"
+                    f" \t unexpected file name format encountered: {barcode}/{i.name}"
                 )
                 continue
             if not parts[-1].isnumeric():
-                print(f" ⚠️\t unexpected file name encountered: {barcode}/{i.name}")
+                print(f" \t unexpected file name encountered: {barcode}/{i.name}")
                 continue
             tiff_paths.append(i.path)
             sequence.append(int(parts[-1]))
@@ -110,7 +110,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
     except Exception as e:
         with open(Path(STATUS_FILES_DIR).joinpath(f"{barcode}-problem"), "w") as f:
             traceback.print_exc(file=f)
-        logger.exception("‼️")
+        logger.exception("!!")
         raise
 
     # raise exception if the sequence is missing any numbers
@@ -122,7 +122,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
     except Exception as e:
         with open(Path(STATUS_FILES_DIR).joinpath(f"{barcode}-problem"), "w") as f:
             traceback.print_exc(file=f)
-        logger.exception("‼️")
+        logger.exception("!!")
         raise
 
     # set up manifest
@@ -169,11 +169,11 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
         if items_response.get("items"):
             items = items_response["items"]
         if len(items) > 1:
-            raise ValueError("❌ more than one item found for barcode")
+            raise ValueError("X more than one item found for barcode")
         if items[0].get("holdingsRecordId"):
             holdingsRecordId = items[0]["holdingsRecordId"]
         else:
-            raise ValueError("❌ no holdingsRecordId found")
+            raise ValueError("X no holdingsRecordId found")
 
         holdings_query = f"{FOLIO_API_URL}/holdings-storage/holdings/{holdingsRecordId}"
         holdings_response = requests.get(holdings_query, headers=okapi_headers).json()
@@ -181,7 +181,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
         if holdings_response.get("instanceId"):
             instanceId = holdings_response["instanceId"]
         else:
-            raise ValueError("❌ no instanceId found")
+            raise ValueError("X no instanceId found")
 
         # NOTE this endpoint returns a record that shows MARC fields
         instance_query = (
@@ -192,7 +192,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
         if instance_response.get("fields"):
             fields = instance_response["fields"]
         else:
-            raise ValueError("❌ no fields found")
+            raise ValueError("X no fields found")
         title = ""
         author = ""
         edition = ""
@@ -205,7 +205,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
                 # TODO account for many more subfields
                 # https://www.loc.gov/marc/bibliographic/bd245.html
                 if "$a " not in field["content"]:
-                    raise ValueError("❌ no title found")
+                    raise ValueError("X no title found")
                 if "$c " in field["content"]:
                     subfield_c_position = field["content"].find("$c ")
                     author = field["content"][subfield_c_position + 3 :].strip(" /:;,.")
@@ -222,7 +222,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
     except Exception as e:
         with open(Path(STATUS_FILES_DIR).joinpath(f"{barcode}-problem"), "w") as f:
             traceback.print_exc(file=f)
-        logger.exception("‼️")
+        logger.exception("!!")
         raise
 
     # add metadata to manifest
@@ -241,7 +241,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
     except Exception as e:
         with open(Path(STATUS_FILES_DIR).joinpath(f"{barcode}-problem"), "w") as f:
             traceback.print_exc(file=f)
-        logger.exception("‼️")
+        logger.exception("!!")
         raise
 
     # loop through sorted list of TIFF paths
@@ -258,7 +258,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
             )
             != 0
         ):
-            print("❌ an error occurred running the vips command")
+            print("X an error occurred running the vips command")
             raise RuntimeError(
                 f"{VIPS_CMD} tiffsave {f} {PROCESSED_IIIF_DIR}/{barcode}/{page_num}{EXTENSION} --tile --pyramid --compression jpeg --tile-width 256 --tile-height 256"
             )
@@ -285,7 +285,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
                     ),
                 )
                 print(
-                    f" ✅\t TIFF sent to S3: {barcode}/{page_num}.tif",
+                    f" \t TIFF sent to S3: {barcode}/{page_num}.tif",
                     flush=True,
                 )
             except botocore.exceptions.ClientError as e:
@@ -295,7 +295,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
                     print(f"Request ID: {e.response['ResponseMetadata']['RequestId']}")
                     print(f"HTTP Code: {e.response['ResponseMetadata']['HTTPStatusCode']}")
                 else:
-                    logger.exception("‼️")
+                    logger.exception("!!")
                     raise e
         else:
             pass
@@ -341,7 +341,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
     except Exception as e:
         with open(Path(STATUS_FILES_DIR).joinpath(f"{barcode}-problem"), "w") as f:
             traceback.print_exc(file=f)
-        logger.exception("‼️")
+        logger.exception("!!")
         raise
 
     # remove `STATUS_FILES_DIR/{barcode}-processing` file
@@ -350,7 +350,7 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
     except Exception as e:
         with open(Path(STATUS_FILES_DIR).joinpath(f"{barcode}-problem"), "w") as f:
             traceback.print_exc(file=f)
-        logger.exception("‼️")
+        logger.exception("!!")
         raise
 
 
@@ -358,7 +358,7 @@ def directory_setup(directory):
     if not Path(directory).exists():
         Path(directory).mkdir()
     elif Path(directory).is_file():
-        print(f" ❌\t A non-directory file exists at: {directory}")
+        print(f" X\t A non-directory file exists at: {directory}")
         raise FileExistsError
     return Path(directory)
 
