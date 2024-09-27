@@ -24,12 +24,9 @@ from slack_handler import SlackHandler
 logging.handlers.SlackHandler = SlackHandler
 
 logging.config.fileConfig(
-    # set the logging configuration in the settings.ini file
     Path(__file__).parent.absolute().joinpath("settings.ini"),
-    disable_existing_loggers=False,
-)
+    disable_existing_loggers=False,)
 logger = logging.getLogger("dibsiiif")
-
 
 def main(barcode: "the barcode of an item to be processed"):  # type: ignore
     """Process an item for Caltech Library DIBS."""
@@ -141,10 +138,29 @@ def main(barcode: "the barcode of an item to be processed"):  # type: ignore
     # NOTE barcode validation happens in the DIBS interface
     # starting from a barcode, we must make 3 requests to get the instance record
     try:
+        tenant = config('FOLIO_API_TENANT')
+        username = config('FOLIO_OKAPI_USERNAME')
+        password = config('FOLIO_OKAPI_PASSWORD')
+        hostname = config('FOLIO_API_URL')
+        endpoint = config('FOLIO_OKAPI_ENDPOINT')
+
+        def get_folio_token():
+            headers = {"Accept": "application/json",
+                       "Content-Type": "application/json",
+                       "X-Okapi-Tenant": tenant, }
+
+            json = {"username": username, "password": password}
+            url = "%s/%s" % (hostname, endpoint)
+
+            r = requests.post(url, json=json, headers=headers)
+
+            token = r.cookies.get('folioAccessToken')
+            return token
+
         FOLIO_API_URL = config("FOLIO_API_URL").rstrip("/")
         okapi_headers = {
-            "X-Okapi-Tenant": config("FOLIO_API_TENANT"),
-            "x-okapi-token": config("FOLIO_API_TOKEN"),
+            "X-Okapi-Tenant": tenant,
+            "x-okapi-token": get_folio_token(),
         }
 
         items_query = f"{FOLIO_API_URL}/inventory/items?query=barcode%3D%3D{barcode}"
@@ -391,7 +407,6 @@ def validate_settings():
         VIPS_CMD,
         EXTENSION,
     )
-
 
 if __name__ == "__main__":
     # fmt: off
